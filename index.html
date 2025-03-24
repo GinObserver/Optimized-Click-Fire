@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Click & Fire Game</title>
+    <title>Optimized Click & Fire Game</title>
     <style>
         body {
             margin: 0;
@@ -21,10 +21,18 @@
             left: 10px;
             font-size: 24px;
         }
+        #fps {
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            font-size: 16px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="fps">FPS: 0</div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script src="./src/js/game.js"></script>
 </body>
