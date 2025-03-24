@@ -4,26 +4,6 @@ const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const fpsElement = document.getElementById('fps');
 
-// Game configuration
-const CONFIG = {
-    TARGET_FPS: 60,
-    FRAME_TIME: 1000 / 60,
-    GRID_CELL_SIZE: 100,
-    TARGET_SPAWN_INTERVAL: 200,
-    TARGET_MAX_LIFESPAN: 8000,
-    TARGET_FADE_START_PERCENT: 0.75,
-    PROJECTILE_SPEED: 5,
-    PROJECTILE_RADIUS: 5,
-    INITIAL_POOL_SIZE: 20,
-    TARGET_MIN_SIZE: 10,
-    TARGET_SIZE_VARIATION: 20,
-    COLORS: {
-        PLAYER: 'blue',
-        TARGET: 'green',
-        PROJECTILE: 'red'
-    }
-};
-
 // Game state variables
 let gameRunning = true;
 let score = 0;
@@ -40,11 +20,9 @@ const player = {
     color: CONFIG.COLORS.PLAYER
 };
 
-// Arrays and pools
+// Arrays for game objects - REMOVE the duplicated pool declarations
 let projectiles = [];
 let targets = [];
-let projectilePool = [];
-let targetPool = [];
 
 // Spatial grid for collision detection
 const grid = {};
@@ -226,30 +204,31 @@ class Game {
 /**
  * Initialize object pools with pre-created objects
  */
-function initializePools() {
-    // Initialize projectile pool
-    for (let i = 0; i < CONFIG.INITIAL_POOL_SIZE; i++) {
-        projectilePool.push({
-            x: 0,
-            y: 0,
-            radius: CONFIG.PROJECTILE_RADIUS,
-            color: CONFIG.COLORS.PROJECTILE,
-            velocity: { x: 0, y: 0 }
-        });
-    }
-
-    // Initialize target pool
-    for (let i = 0; i < CONFIG.INITIAL_POOL_SIZE; i++) {
-        targetPool.push({
-            x: 0,
-            y: 0,
-            radius: 0,
-            color: CONFIG.COLORS.TARGET,
-            creationTime: 0,
-            currentOpacity: 1
-        });
-    }
-}
+// REMOVE this entire function as pools are already initialized in pool.js
+// function initializePools() {
+//     // Initialize projectile pool
+//     for (let i = 0; i < CONFIG.INITIAL_POOL_SIZE; i++) {
+//         projectilePool.push({
+//             x: 0,
+//             y: 0,
+//             radius: CONFIG.PROJECTILE_RADIUS,
+//             color: CONFIG.COLORS.PROJECTILE,
+//             velocity: { x: 0, y: 0 }
+//         });
+//     }
+//
+//     // Initialize target pool
+//     for (let i = 0; i < CONFIG.INITIAL_POOL_SIZE; i++) {
+//         targetPool.push({
+//             x: 0,
+//             y: 0,
+//             radius: 0,
+//             color: CONFIG.COLORS.TARGET,
+//             creationTime: 0,
+//             currentOpacity: 1
+//         });
+//     }
+// }
 
 // ===== RENDERING FUNCTIONS =====
 
@@ -317,11 +296,13 @@ function batchRender() {
 
 // ===== GAME INITIALIZATION =====
 
-// Initialize object pools
-initializePools();
+// REMOVE this line as pools are already initialized in pool.js
+// initializePools();
 
-// Start creating targets
-setInterval(createTarget, CONFIG.TARGET_SPAWN_INTERVAL);
+// Start creating targets - make sure createTarget function exists
+// If you're using the Game class method, you need to reference it through the game instance
+// setInterval(createTarget, CONFIG.TARGET_SPAWN_INTERVAL);
+// REMOVE this line as targets are created by the Game class
 
 // Start the game loop
 const game = new Game();
