@@ -328,3 +328,142 @@ Please help me implement a particle system for character footsteps, following th
 4. Ensure mobile compatibility
 
 Specifically focus on performance optimization and provide code that follows these patterns.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Personal Rulebook: Click & Fire Game Development Style Guide
+
+## 1. Inline Documentation Style
+
+- **Every line gets a comment**: `statement; /* explanation */`
+- **Class & method comments**: Place at declaration line `methodName() { /* purpose */ }`
+- **Complex blocks**: Add explanatory comments for each logical component
+- **Comment focus**: Explain "what" and "why", not just restating the code
+- **Keep it concise**: Use brief but clear explanations
+
+## 2. Code Organization
+
+- **Methods first approach**: Initialize/configure methods before behavioral methods
+- **Logical grouping**: Group related methods together (setup, update, rendering)
+- **Constructor at strategic position**: After setup methods, before behavioral methods
+- **Game loop at the end**: Place game loop and control methods at the end
+
+## 3. Variable Naming Conventions
+
+- **Descriptive names**: Use names that clearly indicate purpose (`targetPool` not `tPool`)
+- **Consistent casing**: Use camelCase for variables and methods
+- **Hungarian notation avoided**: Don't prefix variables with type indicators
+- **Avoid abbreviations**: Write full words for better readability
+
+## 4. Performance Optimizations
+
+- **Object pooling**: Reuse objects instead of creating new ones (`projectilePool`, `targetPool`)
+- **Reverse iteration**: Iterate backwards when removing items from arrays
+- **Spatial partitioning**: Use grid systems for efficient collision detection
+- **Frame timing control**: Limit updates based on elapsed time
+
+## 5. State Management
+
+- **Centralized state**: Keep game state in the main class
+- **Clean initialization**: Each state variable properly initialized in dedicated methods
+- **State separation**: Keep UI state (score, FPS) separate from game state (entities)
+
+## 6. Entity Management
+
+- **Pool-based entities**: Create and recycle entities through object pools
+- **Entity lifecycle**: Clear system for creating, updating, and removing entities
+- **Decoupled entity types**: Maintain separate arrays for different entity types
+- **Bounds checking**: Always check if entities should exist in the game world
+
+## 7. Rendering Approach
+
+- **Dedicated renderer**: Use a separate renderer class rather than inline drawing
+- **Batch rendering**: Group similar rendering operations
+- **Clear before draw**: Always clear previous frame before drawing new one
+- **Render order**: Background → Targets → Projectiles → Player → UI
+
+## 8. Event Handling
+
+- **Centralized listeners**: Set up all event listeners in a dedicated method
+- **Clean event parameters**: Extract relevant data from events before processing
+- **Direct connections**: Connect events directly to appropriate handler methods
+
+## 9. Game Loop Design
+
+- **requestAnimationFrame**: Use for smooth animation and browser optimization
+- **Performance monitoring**: Track and display FPS
+- **Frame timing**: Control update frequency for consistent behavior
+- **State checking**: Skip updates when game is paused
+
+## 10. Code Structure Rules
+
+- **Method size**: Keep methods small and focused on a single task
+- **Initialization sequence**: Clear order in constructor (canvas → state → systems → events)
+- **Configuration separation**: Keep game configuration in separate CONFIG object
+- **System initialization**: Initialize all subsystems before starting game loop
+
+## 11. Documentation Best Practices
+
+- **Document constants**: Explain the purpose and units of all configuration values
+- **Document class relationships**: Explain how classes interact with each other
+- **Document performance considerations**: Note any optimizations and their purpose
+- **Use explanatory variables**: Create named variables for complex calculations
+
+## 12. Game-Specific Rules
+
+- **Collision handling**: Use efficient spatial partitioning for collision detection
+- **Entity spawning**: Clear rules for when and where entities appear
+- **Score management**: Centralized score tracking with UI updates
+- **Player positioning**: Fixed position with interaction through projectiles
+
+By following these rules, I maintain a consistent, efficient, and well-documented code style that makes my game easier to develop, debug, and expand.
+
+
+
+
+## 1. Inline Documentation Style
+
+- **Every line gets a comment**: `statement; /* explanation */`
+- **Class & method comments**: Place at declaration line `methodName() { /* purpose */ }`
+- **Complex blocks**: Add explanatory comments for each logical component
+- **Comment focus**: Explain "what" and "why", not just restating the code
+- **Keep it concise**: Use brief but clear explanations
+
+## 2. Code Organization
+
+- **Methods first approach**: Initialize/configure methods before behavioral methods
+- **Logical grouping**: Group related methods together (setup, update, rendering)
+- **Constructor at strategic position**: After setup methods, before behavioral methods
+- **Game loop at the end**: Place game loop and control methods at the end
+
+## 3. Variable Naming Conventions
+
+- **Descriptive names**: Use names that clearly indicate purpose (`targetPool` not `tPool`)
+- **Consistent casing**: Use camelCase for variables and methods
+- **Hungarian notation avoided**: Don't prefix variables with type indicators
+- **Avoid abbreviations**: Write full words for better readability
+
+## 10. Code Structure Rules
+
+- **Method size**: Keep methods small and focused on a single task
+- **Initialization sequence**: Clear order in constructor (canvas → state → systems → events)
+- **Configuration separation**: Keep game configuration in separate CONFIG object
+- **System initialization**: Initialize all subsystems before starting game loop
+
+## 11. Documentation Best Practices
+
+- **Document constants**: Explain the purpose and units of all configuration values
+- **Document class relationships**: Explain how classes interact with each other
+- **Document performance considerations**: Note any optimizations and their purpose
+- **Use explanatory variables**: Create named variables for complex calculations

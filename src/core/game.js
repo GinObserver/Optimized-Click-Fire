@@ -1,448 +1,207 @@
-/**
- * @fileoverview Core game class that manages the game loop, entities, and game state
- * @author Click & Fire Development Team
- * 
- * Class: Game
- * ============
- * Core game engine that handles:
- * - Canvas and DOM setup
- * - Game state management
- * - Entity lifecycle (projectiles, targets)
- * - Collision detection
- * - Rendering
- * - Game loop
- * 
- * Properties:
- * -----------
- * @property {HTMLCanvasElement} canvas - Game canvas element
- * @property {CanvasRenderingContext2D} ctx - Canvas rendering context
- * @property {HTMLElement} scoreElement - Score display element
- * @property {HTMLElement} fpsElement - FPS counter element
- * @property {boolean} running - Game running state
- * @property {number} score - Current game score
- * @property {number} lastUpdateTime - Last frame timestamp
- * @property {number} frameCount - Frames in current second
- * @property {number} lastFpsUpdateTime - Last FPS update time
- * @property {number} currentFps - Current FPS value
- * @property {Object} player - Player entity
- * @property {Array<Object>} projectiles - Active projectiles
- * @property {Array<Object>} targets - Active targets
- * @property {GameRenderer} renderer - Game rendering system
- * @property {ObjectPool} projectilePool - Pool for projectile objects
- * @property {ObjectPool} targetPool - Pool for target objects
- * @property {SpatialGrid} collisionGrid - Spatial partitioning grid for collisions
- * 
- * Methods:
- * --------
- * Configuration:
- * @method configureCanvasAndDom() - Sets up canvas and DOM elements
- * @method initializeState() - Sets up initial game state
- * @method setupEventListeners() - Configures input handling
- * @method setupGameSystems() - Initializes game subsystems
- * @method initializePools() - Creates object pools for entities
- * @method initializeCollisionSystem() - Sets up spatial partitioning
- * 
- * Game Loop:
- * @method update(timestamp) - Main game loop
- * @method updateGameState() - Updates game entities
- * @method render() - Renders current game state
- * 
- * Entity Management:
- * @method updateTargets() - Updates target states and lifespans
- * @method updateProjectiles() - Updates projectile positions
- * @method createProjectile(clickX, clickY) - Creates new projectile
- * @method createTarget() - Creates new target
- * 
- * Collision:
- * @method checkCollisions() - Handles entity collisions
- * 
- * Game Control:
- * @method start() - Starts game loop
- */
+class Game { /* Main game class that manages all game systems and state */
 
-/**
- * Main Game class responsible for controlling the entire game system
- * @class Game
- * @classdesc Manages game state, rendering, physics, and interactions
- */
-class Game {
-    /**
-     * Configures canvas and DOM element references
-     * @private
-     */
-    configureCanvasAndDom() {
-        /**
-         * Canvas element where the game is rendered
-         * @type {HTMLCanvasElement}
-         */
-        this.canvas = document.getElementById('gameCanvas');
-        
-        /**
-         * Canvas 2D rendering context
-         * @type {CanvasRenderingContext2D}
-         */
-        this.ctx = this.canvas.getContext('2d');
-        
-        /**
-         * DOM element that displays the score
-         * @type {HTMLElement}
-         */
-        this.scoreElement = document.getElementById('score');
-        
-        /**
-         * DOM element that displays the FPS counter
-         * @type {HTMLElement}
-         */
-        this.fpsElement = document.getElementById('fps');
+    configureCanvasAndDom() { /* Initialize canvas and DOM elements */
+        this.canvas = document.getElementById('gameCanvas'); /* Get the main game canvas element */
+        this.ctx = this.canvas.getContext('2d'); /* Get 2D rendering context for drawing */
+        this.scoreElement = document.getElementById('score'); /* Get score display element */
+        this.fpsElement = document.getElementById('fps'); /* Get FPS counter display element */
     }
 
-    /**
-     * Initializes game state variables
-     * @private
-     */
-    initializeState() {
-        /**
-         * Flag indicating if the game is currently running
-         * @type {boolean}
-         */
-        this.running = true;
-        
-        /**
-         * Current game score
-         * @type {number}
-         */
-        this.score = 0;
-        
-        /**
-         * Timestamp of the last update for frame rate control
-         * @type {number}
-         */
-        this.lastUpdateTime = 0;
-        
-        /**
-         * Counter for frames within the current second
-         * @type {number}
-         */
-        this.frameCount = 0;
-        
-        /**
-         * Timestamp of the last FPS counter update
-         * @type {number}
-         */
-        this.lastFpsUpdateTime = 0;
-        
-        /**
-         * Current frames per second
-         * @type {number}
-         */
-        this.currentFps = 0;
+    initializeState() { /* Set up initial game state variables */
+        this.running = true; /* Flag indicating if game is active */
+        this.score = 0; /* Player's current score */
+        this.lastUpdateTime = 0; /* Time of last game update for frame timing */
+        this.frameCount = 0; /* Number of frames rendered in current second */
+        this.lastFpsUpdateTime = 0; /* Time of last FPS counter update */
+        this.currentFps = 0; /* Current frames per second value */
     
-        /**
-         * Player object containing position and rendering information
-         * @type {Object}
-         * @property {number} x - X coordinate of the player
-         * @property {number} y - Y coordinate of the player
-         * @property {number} size - Radius of the player circle
-         * @property {string} color - Color of the player
-         */
-        this.player = {
-            x: this.canvas.width / 2,
-            y: this.canvas.height - 50,
-            size: 30,
-            color: CONFIG.COLORS.PLAYER
+        this.player = { /* Initialize player object with starting position and properties */
+            x: this.canvas.width / 2, /* Center player horizontally */
+            y: this.canvas.height - 50, /* Position player near bottom of screen */
+            size: 30, /* Player circle radius */
+            color: CONFIG.COLORS.PLAYER /* Player color from config */
         };
 
-        /**
-         * Array of active projectiles
-         * @type {Array<Object>}
-         */
-        this.projectiles = [];
-        
-        /**
-         * Array of active targets
-         * @type {Array<Object>}
-         */
-        this.targets = [];
+        this.projectiles = []; /* Array to store active projectiles */
+        this.targets = []; /* Array to store active targets */
     }
 
-    initializePools() {
-        // Create projectile pool
-        this.projectilePool = new ObjectPool(() => ({
-            x: 0,
-            y: 0,
-            radius: CONFIG.PROJECTILE_RADIUS,
-            color: CONFIG.COLORS.PROJECTILE,
-            velocity: { x: 0, y: 0 }
+    initializePools() { /* Set up object pools for entity recycling */
+        this.projectilePool = new ObjectPool(() => ({ /* Create projectile pool with factory function */
+            x: 0, /* Starting x position */
+            y: 0, /* Starting y position */
+            radius: CONFIG.PROJECTILE_RADIUS, /* Projectile size */
+            color: CONFIG.COLORS.PROJECTILE, /* Projectile color */
+            velocity: { x: 0, y: 0 } /* Initial velocity vector */
         }));
 
-        // Create target pool
-        this.targetPool = new ObjectPool(() => ({
-            x: 0,
-            y: 0,
-            radius: 0,
-            color: CONFIG.COLORS.TARGET,
-            creationTime: 0,
-            currentOpacity: 1
+        this.targetPool = new ObjectPool(() => ({ /* Create target pool with factory function */
+            x: 0, /* Starting x position */
+            y: 0, /* Starting y position */
+            radius: 0, /* Will be set when spawned */
+            color: CONFIG.COLORS.TARGET, /* Target color */
+            creationTime: 0, /* Will track when target was created */
+            currentOpacity: 1 /* Full opacity when spawned */
         }));
     }
 
-    initializeCollisionSystem() {
-        // Create spatial partitioning grid
-        this.collisionGrid = new SpatialGrid(CONFIG.GRID_CELL_SIZE);
+    initializeCollisionSystem() { /* Set up spatial partitioning for collision detection */
+        this.collisionGrid = new SpatialGrid(CONFIG.GRID_CELL_SIZE); /* Create grid with configured cell size */
     }
 
-    /**
-     * Sets up event listeners for user interaction
-     * @private
-     */
-    setupEventListeners() {
-        /**
-         * Click event listener for shooting projectiles
-         * @listens click
-         */
-        this.canvas.addEventListener('click', (event) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-            this.createProjectile(clickX, clickY);
+    setupEventListeners() { /* Configure input handling */
+        this.canvas.addEventListener('click', (event) => { /* Listen for mouse clicks */
+            const rect = this.canvas.getBoundingClientRect(); /* Get canvas position */
+            const clickX = event.clientX - rect.left; /* Calculate click X relative to canvas */
+            const clickY = event.clientY - rect.top; /* Calculate click Y relative to canvas */
+            this.createProjectile(clickX, clickY); /* Create projectile at click position */
         });
     }
 
-    /**
-     * Starts periodic target generation
-     * @private
-     */
-    startTargetGeneration() {
-        setInterval(() => this.createTarget(), CONFIG.TARGET_SPAWN_INTERVAL);
+    startTargetGeneration() { /* Begin periodic target creation */
+        setInterval(() => this.createTarget(), CONFIG.TARGET_SPAWN_INTERVAL); /* Create new target at fixed intervals */
     }
 
-    /**
-     * Sets up game systems like renderer
-     * @private
-     */
-    setupGameSystems() {
-        /**
-         * Game renderer responsible for drawing game elements
-         * @type {GameRenderer}
-         */
-        this.renderer = new GameRenderer(this.canvas);
-        this.startTargetGeneration();
+    setupGameSystems() { /* Initialize game subsystems */
+        this.renderer = new GameRenderer(this.canvas); /* Create rendering system */
+        this.startTargetGeneration(); /* Start spawning targets */
     }
 
-    /**
-     * Creates a new Game instance and initializes all systems
-     * @constructor
-     */
-    constructor() {
-        this.configureCanvasAndDom();
-        this.initializeState();
-        this.initializePools();
-        this.initializeCollisionSystem();
-        this.setupEventListeners();
-        this.setupGameSystems();
+    constructor() { /* Initialize game instance */
+        this.configureCanvasAndDom(); /* Set up canvas and DOM elements */
+        this.initializeState(); /* Initialize game state */
+        this.initializePools(); /* Set up object pools */
+        this.initializeCollisionSystem(); /* Set up collision detection */
+        this.setupEventListeners(); /* Configure input handling */
+        this.setupGameSystems(); /* Initialize subsystems */
     }  
 
-    /**
-     * Updates all targets, handling aging and transparency effects
-     * @private
-     */
-    updateTargets() {
-        const currentTime = Date.now();
+    updateTargets() { /* Update all active targets */
+        const currentTime = Date.now(); /* Get current timestamp */
         
-        for (let i = this.targets.length - 1; i >= 0; i--) {
-            const target = this.targets[i];
-            const targetAge = currentTime - target.creationTime;
+        for (let i = this.targets.length - 1; i >= 0; i--) { /* Iterate targets backwards */
+            const target = this.targets[i]; /* Get current target */
+            const targetAge = currentTime - target.creationTime; /* Calculate target lifetime */
             
-            // Remove expired targets
-            if (targetAge >= CONFIG.TARGET_MAX_LIFESPAN) {
-                this.targetPool.release(target);
-                this.targets.splice(i, 1);
+            if (targetAge >= CONFIG.TARGET_MAX_LIFESPAN) { /* Check if target expired */
+                this.targetPool.release(target); /* Return to pool */
+                this.targets.splice(i, 1); /* Remove from active targets */
             } 
-            // Fade out targets approaching expiration
-            else if (targetAge > CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT) {
-                const fadeTimeTotal = CONFIG.TARGET_MAX_LIFESPAN * (1 - CONFIG.TARGET_FADE_START_PERCENT);
-                const fadeTimeElapsed = targetAge - (CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT);
-                target.currentOpacity = 1 - (fadeTimeElapsed / fadeTimeTotal);
+            else if (targetAge > CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT) { /* Check if target should start fading */
+                const fadeTimeTotal = CONFIG.TARGET_MAX_LIFESPAN * (1 - CONFIG.TARGET_FADE_START_PERCENT); /* Calculate total fade duration */
+                const fadeTimeElapsed = targetAge - (CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT); /* Calculate elapsed fade time */
+                target.currentOpacity = 1 - (fadeTimeElapsed / fadeTimeTotal); /* Update target opacity */
             }
         }
     }
 
-    /**
-     * Updates all projectiles, handling movement and out-of-bounds detection
-     * @private
-     */
-    updateProjectiles() {
-        for (let i = this.projectiles.length - 1; i >= 0; i--) {
-            const projectile = this.projectiles[i];
+    updateProjectiles() { /* Update all active projectiles */
+        for (let i = this.projectiles.length - 1; i >= 0; i--) { /* Iterate projectiles backwards */
+            const projectile = this.projectiles[i]; /* Get current projectile */
             
-            // Move projectile based on velocity
-            projectile.x += projectile.velocity.x;
-            projectile.y += projectile.velocity.y;
+            projectile.x += projectile.velocity.x; /* Update X position */
+            projectile.y += projectile.velocity.y; /* Update Y position */
             
-            // Check if projectile is out of bounds
             if (projectile.x < 0 || projectile.x > this.canvas.width || 
-                projectile.y < 0 || projectile.y > this.canvas.height) {
-                this.projectilePool.release(projectile);
-                this.projectiles.splice(i, 1);
+                projectile.y < 0 || projectile.y > this.canvas.height) { /* Check if out of bounds */
+                this.projectilePool.release(projectile); /* Return to pool */
+                this.projectiles.splice(i, 1); /* Remove from active projectiles */
             }
         }
     }
 
-    /**
-     * Updates all game entities and state
-     * @private
-     */
-    updateGameState() {
-        this.updateTargets();
-        this.updateProjectiles();
+    updateGameState() { /* Update game state for current frame */
+        this.updateTargets(); /* Update all targets */
+        this.updateProjectiles(); /* Update all projectiles */
     }
 
-    /**
-     * Creates a new projectile at the player's position aimed toward the click coordinates
-     * @param {number} clickX - X coordinate of the click
-     * @param {number} clickY - Y coordinate of the click
-     * @public
-     */
-    createProjectile(clickX, clickY) {
-        // Calculate angle to target
-        const angleToTarget = Math.atan2(clickY - this.player.y, clickX - this.player.x);
+    createProjectile(clickX, clickY) { /* Create new projectile from click */
+        const angleToTarget = Math.atan2(clickY - this.player.y, clickX - this.player.x); /* Calculate angle to click */
+        const projectile = this.projectilePool.get(); /* Get projectile from pool */
         
-        // Get projectile from pool
-        const projectile = this.projectilePool.get();
+        projectile.x = this.player.x; /* Set start X position */
+        projectile.y = this.player.y; /* Set start Y position */
+        projectile.velocity.x = Math.cos(angleToTarget) * CONFIG.PROJECTILE_SPEED; /* Calculate X velocity */
+        projectile.velocity.y = Math.sin(angleToTarget) * CONFIG.PROJECTILE_SPEED; /* Calculate Y velocity */
         
-        // Set projectile properties
-        projectile.x = this.player.x;
-        projectile.y = this.player.y;
-        projectile.velocity.x = Math.cos(angleToTarget) * CONFIG.PROJECTILE_SPEED;
-        projectile.velocity.y = Math.sin(angleToTarget) * CONFIG.PROJECTILE_SPEED;
-        
-        // Add to active projectiles
-        this.projectiles.push(projectile);
+        this.projectiles.push(projectile); /* Add to active projectiles */
     }
 
-    /**
-     * Creates a new target at a random position
-     * @public
-     */
-    createTarget() {
-        // Get target from pool
-        const target = this.targetPool.get();
+    createTarget() { /* Create new target */
+        const target = this.targetPool.get(); /* Get target from pool */
         
-        // Set random size
-        target.radius = Math.random() * CONFIG.TARGET_SIZE_VARIATION + CONFIG.TARGET_MIN_SIZE;
+        target.radius = Math.random() * CONFIG.TARGET_SIZE_VARIATION + CONFIG.TARGET_MIN_SIZE; /* Set random size */
+        target.x = Math.random() * (this.canvas.width - target.radius * 2) + target.radius; /* Set random X position */
+        target.y = Math.random() * (this.canvas.height / 2) + target.radius; /* Set random Y position */
+        target.creationTime = Date.now(); /* Set creation timestamp */
+        target.currentOpacity = 1; /* Set initial opacity */
         
-        // Set random position in top half of screen
-        target.x = Math.random() * (this.canvas.width - target.radius * 2) + target.radius;
-        target.y = Math.random() * (this.canvas.height / 2) + target.radius;
-        
-        // Set creation time and opacity
-        target.creationTime = Date.now();
-        target.currentOpacity = 1;
-        
-        // Add to active targets
-        this.targets.push(target);
+        this.targets.push(target); /* Add to active targets */
     }
 
-    /**
-     * Checks for collisions between projectiles and targets using spatial partitioning
-     * @private
-     */
-    checkCollisions() {
-        // Clear the collision grid
-        this.collisionGrid.clear();
-        
-        // Add all targets to the grid
-        this.targets.forEach((target, index) => this.collisionGrid.addObject(target, index));
+    checkCollisions() { /* Check for collisions between projectiles and targets */
+        this.collisionGrid.clear(); /* Reset collision grid */
+        this.targets.forEach((target, index) => this.collisionGrid.addObject(target, index)); /* Add targets to grid */
 
-        // Check each projectile against nearby targets
-        for (let i = this.projectiles.length - 1; i >= 0; i--) {
-            const projectile = this.projectiles[i];
-            
-            // Get only targets that could possibly collide
-            const nearbyTargets = this.collisionGrid.getNearbyObjects(projectile.x, projectile.y);
+        for (let i = this.projectiles.length - 1; i >= 0; i--) { /* Check each projectile */
+            const projectile = this.projectiles[i]; /* Get current projectile */
+            const nearbyTargets = this.collisionGrid.getNearbyObjects(projectile.x, projectile.y); /* Get potential collisions */
 
-            // Check collision with each nearby target
-            for (const targetData of nearbyTargets) {
-                const target = targetData.obj;
-                
-                // Calculate distance between centers
-                const distance = Math.hypot(
-                    projectile.x - target.x,
-                    projectile.y - target.y
-                );
+            for (const targetData of nearbyTargets) { /* Check each nearby target */
+                const target = targetData.obj; /* Get target object */
+                const distance = Math.hypot(projectile.x - target.x, projectile.y - target.y); /* Calculate distance */
 
-                // If collision detected (circles overlapping)
-                if (distance < projectile.radius + target.radius) {
-                    // Return target to pool
-                    this.targetPool.release(target);
-                    this.targets.splice(targetData.index, 1);
-                    
-                    // Return projectile to pool
-                    this.projectilePool.release(projectile);
-                    this.projectiles.splice(i, 1);
-                    
-                    // Update score
-                    this.score += 10;
-                    this.scoreElement.textContent = `Score: ${this.score}`;
-                    break;
+                if (distance < projectile.radius + target.radius) { /* Check for collision */
+                    this.targetPool.release(target); /* Return target to pool */
+                    this.targets.splice(targetData.index, 1); /* Remove target */
+                    this.projectilePool.release(projectile); /* Return projectile to pool */
+                    this.projectiles.splice(i, 1); /* Remove projectile */
+                    this.score += 10; /* Increase score */
+                    this.scoreElement.textContent = `Score: ${this.score}`; /* Update score display */
+                    break; /* Exit loop after collision */
                 }
             }
         }
     }
 
-    /**
-     * Renders the current game state using the renderer
-     * @private
-     */
-    render() {
-        this.renderer.clear();
-        this.renderer.drawPlayer(this.player);
-        this.renderer.drawTargets(this.targets);
-        this.renderer.drawProjectiles(this.projectiles);
+    render() { /* Render current game state */
+        this.renderer.clear(); /* Clear previous frame */
+        this.renderer.drawPlayer(this.player); /* Draw player */
+        this.renderer.drawTargets(this.targets); /* Draw all targets */
+        this.renderer.drawProjectiles(this.projectiles); /* Draw all projectiles */
     }
 
-    /**
-     * Main game loop that updates and renders the game
-     * @param {number} timestamp - Current timestamp from requestAnimationFrame
-     * @private
-     */
-    update(timestamp) {
-        // FPS calculation
-        this.frameCount++;
-        if (timestamp - this.lastFpsUpdateTime > 1000) {
-            this.currentFps = this.frameCount;
-            this.fpsElement.textContent = `FPS: ${this.currentFps}`;
-            this.frameCount = 0;
-            this.lastFpsUpdateTime = timestamp;
+    update(timestamp) { /* Main game loop */
+        this.frameCount++; /* Increment frame counter */
+        if (timestamp - this.lastFpsUpdateTime > 1000) { /* Check if second has passed */
+            this.currentFps = this.frameCount; /* Calculate FPS */
+            this.fpsElement.textContent = `FPS: ${this.currentFps}`; /* Update FPS display */
+            this.frameCount = 0; /* Reset frame counter */
+            this.lastFpsUpdateTime = timestamp; /* Update FPS timer */
         }
 
-        // RAF optimization - limit frame rate
-        if (timestamp - this.lastUpdateTime < CONFIG.FRAME_TIME) {
-            requestAnimationFrame((t) => this.update(t));
-            return;
+        if (timestamp - this.lastUpdateTime < CONFIG.FRAME_TIME) { /* Check frame timing */
+            requestAnimationFrame((t) => this.update(t)); /* Schedule next frame */
+            return; /* Skip update if too soon */
         }
-        this.lastUpdateTime = timestamp;
+        this.lastUpdateTime = timestamp; /* Update frame timer */
 
-        // Skip updates if game is paused
-        if (!this.running) {
-            requestAnimationFrame((t) => this.update(t));
-            return;
+        if (!this.running) { /* Check if game is paused */
+            requestAnimationFrame((t) => this.update(t)); /* Keep animation loop running */
+            return; /* Skip update if paused */
         }
 
-        // Update game state and render
-        this.updateGameState();
-        this.checkCollisions();
-        this.render();
+        this.updateGameState(); /* Update game entities */
+        this.checkCollisions(); /* Check for collisions */
+        this.render(); /* Render frame */
 
-        requestAnimationFrame((t) => this.update(t));
+        requestAnimationFrame((t) => this.update(t)); /* Schedule next frame */
     }
 
-    start() {
-        requestAnimationFrame((t) => this.update(t));
+    start() { /* Start the game */
+        requestAnimationFrame((t) => this.update(t)); /* Begin game loop */
     }
-
 }
 
-// Create and start game instance
-const game = new Game();
-game.start();
+const game = new Game(); /* Create game instance */
+game.start(); /* Start the game */

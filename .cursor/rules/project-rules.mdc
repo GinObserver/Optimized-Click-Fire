@@ -3,6 +3,38 @@ description:
 globs: 
 alwaysApply: true
 ---
+## 1. Inline Documentation Style
 
-# Your rule content
+- **Every line gets a comment**: `statement; /* explanation */`
+- **Class & method comments**: Place at declaration line `methodName() { /* purpose */ }`
+- **Complex blocks**: Add explanatory comments for each logical component
+- **Comment focus**: Explain "what" and "why", not just restating the code
+- **Keep it concise**: Use brief but clear explanations
 
+## 2. Code Organization
+
+- **Methods first approach**: Initialize/configure methods before behavioral methods
+- **Logical grouping**: Group related methods together (setup, update, rendering)
+- **Constructor at strategic position**: After setup methods, before behavioral methods
+- **Game loop at the end**: Place game loop and control methods at the end
+
+## 3. Variable Naming Conventions
+
+- **Descriptive names**: Use names that clearly indicate purpose (`targetPool` not `tPool`)
+- **Consistent casing**: Use camelCase for variables and methods
+- **Hungarian notation avoided**: Don't prefix variables with type indicators
+- **Avoid abbreviations**: Write full words for better readability
+
+## 4. Code Structure Rules
+
+- **Method size**: Keep methods small and focused on a single task
+- **Initialization sequence**: Clear order in constructor (canvas → state → systems → events)
+- **Configuration separation**: Keep game configuration in separate CONFIG object
+- **System initialization**: Initialize all subsystems before starting game loop
+
+## 5. Documentation Best Practices
+
+- **Document constants**: Explain the purpose and units of all configuration values
+- **Document class relationships**: Explain how classes interact with each other
+- **Document performance considerations**: Note any optimizations and their purpose
+- **Use explanatory variables**: Create named variables for complex calculations

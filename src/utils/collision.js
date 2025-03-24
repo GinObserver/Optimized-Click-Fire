@@ -1,88 +1,44 @@
-/**
- * @fileoverview Spatial partitioning implementation for efficient collision detection
- * 
- * The SpatialGrid class implements a grid-based spatial partitioning system
- * to optimize collision detection by only checking objects in nearby cells.
- * 
- * @class SpatialGrid
- * @classdesc Grid-based spatial partitioning for optimized collision detection
- */
-class SpatialGrid {
-    /**
-     * Creates a new spatial grid
-     * @constructor
-     * @param {number} cellSize - Size of each grid cell
-     */
-    constructor(cellSize) {
-        /**
-         * Size of each cell in the grid
-         * @type {number}
-         * @private
-         */
-        this.cellSize = cellSize;
-        
-        /**
-         * Object mapping cell coordinates to arrays of objects in that cell
-         * @type {Object}
-         * @private
-         */
-        this.grid = {};
+class SpatialGrid { /* Grid-based spatial partitioning for efficient collision detection */
+
+
+    constructor(cellSize) { /* Initialize grid with cell size */
+        this.cellSize = cellSize; /* Size of each grid cell for partitioning */
+        this.grid = {}; /* Object to store grid cells and their contents */
     }
 
-    /**
-     * Clears all objects from the grid
-     * @public
-     */
-    clear() {
-        this.grid = {};
+    clear() { /* Reset grid for new frame */
+        this.grid = {}; /* Clear all cells */
     }
 
-    /**
-     * Adds an object to the appropriate grid cell
-     * @param {Object} object - Object to add (must have x and y properties)
-     * @param {number} index - Index of the object in its original collection
-     * @public
-     */
-    addObject(object, index) {
-        // Calculate cell coordinates
-        const cellX = Math.floor(object.x / this.cellSize);
-        const cellY = Math.floor(object.y / this.cellSize);
-        const cellKey = `${cellX},${cellY}`;
+    addObject(object, index) { /* Add object to appropriate grid cell */
+        const cellX = Math.floor(object.x / this.cellSize); /* Calculate cell X coordinate */
+        const cellY = Math.floor(object.y / this.cellSize); /* Calculate cell Y coordinate */
+        const cellKey = `${cellX},${cellY}`; /* Create unique key for cell */
         
-        // Create cell array if it doesn't exist
-        if (!this.grid[cellKey]) {
-            this.grid[cellKey] = [];
+        if (!this.grid[cellKey]) { /* Check if cell exists */
+            this.grid[cellKey] = []; /* Create new cell array if needed */
         }
         
-        // Add object to cell
-        this.grid[cellKey].push({ obj: object, index });
+        this.grid[cellKey].push({ obj: object, index }); /* Add object and its index to cell */
     }
 
-    /**
-     * Gets all objects in cells near the specified coordinates
-     * @param {number} x - X coordinate to check
-     * @param {number} y - Y coordinate to check
-     * @returns {Array<{obj: Object, index: number}>} Array of objects and their indices
-     * @public
-     */
-    getNearbyObjects(x, y) {
-        // Calculate center cell
-        const cellX = Math.floor(x / this.cellSize);
-        const cellY = Math.floor(y / this.cellSize);
-        const nearby = [];
 
-        // Check center cell and 8 surrounding cells
-        for (let offsetX = -1; offsetX <= 1; offsetX++) {
-            for (let offsetY = -1; offsetY <= 1; offsetY++) {
-                const checkKey = `${cellX + offsetX},${cellY + offsetY}`;
-                if (this.grid[checkKey]) {
-                    nearby.push(...this.grid[checkKey]);
+    getNearbyObjects(x, y) { /* Get objects in and around specified position */
+        const cellX = Math.floor(x / this.cellSize); /* Get center cell X coordinate */
+        const cellY = Math.floor(y / this.cellSize); /* Get center cell Y coordinate */
+        const nearby = []; /* Array to store nearby objects */
+
+        for (let offsetX = -1; offsetX <= 1; offsetX++) { /* Check surrounding cells horizontally */
+            for (let offsetY = -1; offsetY <= 1; offsetY++) { /* Check surrounding cells vertically */
+                const checkKey = `${cellX + offsetX},${cellY + offsetY}`; /* Calculate cell key */
+                if (this.grid[checkKey]) { /* If cell exists */
+                    nearby.push(...this.grid[checkKey]); /* Add all objects in cell */
                 }
             }
         }
 
-        return nearby;
+        return nearby; /* Return array of nearby objects */
     }
-}
 
-// Note: The global collisionGrid has been moved to the Game class
+
+}
