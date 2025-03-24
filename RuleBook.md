@@ -219,3 +219,112 @@ Please help me optimize my [project type] following these rules:
 - Add spatial partitioning for [specific collisions]
 - Include performance monitoring for [specific metrics]
 ```
+
+
+
+
+- Use JSDoc for all classes and methods
+- Document parameters and return values
+- Explain complex algorithms
+- Maintain a consistent documentation style
+- Include examples for non-obvious usage
+
+2. Modular Code Organization:
+- One concern per file (single responsibility)
+- Group related functionality in modules
+- Use classes for complex objects
+- Separate rendering from logic
+- Implement state patterns for game states
+
+
+- Create input manager abstraction
+- Add configurable sensitivity
+- Handle multi-touch scenarios
+- Adapt controls for different screen sizes
+- Scale UI elements proportionally
+
+
+- Include performance monitoring
+- Add FPS counter and memory usage display
+
+- Provide user-friendly error messages
+
+1. Resource Loading:
+   - Create asset loading manager
+   - Implement preloading for critical assets
+   - Add loading progress indication
+   - Support async loading for non-critical assets
+   - Handle loading errors gracefully
+
+2. Asset Optimization:
+   - Compress images appropriately
+   - Use sprite sheets for related graphics
+   - Optimize audio files for web
+   - Implement lazy loading for large assets
+   - Consider texture atlases for WebGL projects
+
+- Add source maps for debugging
+
+1. Browser Compatibility:
+   - Test in all major browsers
+   - Handle vendor-specific prefixes
+   - Implement feature detection
+   - Provide fallbacks for unsupported features
+   - Optimize for browser-specific quirks
+
+2. Mobile Support:
+   - Optimize touch interactions
+   - Handle device orientation changes
+   - Support gestures where appropriate
+   - Manage battery and performance constraints
+   - Test on various mobile devices
+
+
+1. Particle Systems:
+   - Create reusable particle emitters
+   - Implement particle pools
+   - Support various emission patterns
+   - Add particle physics (gravity, collision)
+   - Optimize rendering with instancing
+
+2. Sound Management:
+   - Implement audio sprite sheets
+   - Add dynamic audio mixing
+   - Support positional audio when appropriate
+   - Handle audio context limitations
+   - Add audio source pooling
+
+3. Game Progression:
+   - Design difficulty curve
+   - Implement dynamic difficulty adjustment
+   - Create achievement/scoring systems
+   - Add persistent progression (localStorage)
+   - Support player profiles
+
+
+
+   I'm working on a [type] game with these requirements:
+- [List key features]
+- [List performance requirements]
+- [List target platforms]
+
+Please help me implement [specific component], following these rules from my game development rulebook:
+1. [Copy relevant section from rule list]
+2. [Add any project-specific requirements]
+
+Specifically focus on [particular aspect] and provide code that follows these patterns.
+
+
+
+I'm working on a 2D platformer with these requirements:
+- Needs to run at 60fps on mobile
+- Features particle effects for character movement
+- Targets modern browsers and mobile devices
+
+Please help me implement a particle system for character footsteps, following these rules:
+1. Use object pooling for particles
+2. Implement batch rendering for performance
+3. Make particles responsive to game physics
+4. Ensure mobile compatibility
+
+Specifically focus on performance optimization and provide code that follows these patterns.
