@@ -18,22 +18,35 @@ class Game { /* Main game class that manages all game systems and state */
         this.player = { /* Initialize player object with starting position and properties */
             x: this.canvas.width / 2, /* Center player horizontally */
             y: this.canvas.height - 50, /* Position player near bottom of screen */
-            size: 30, /* Player circle radius */
-            color: CONFIG.COLORS.PLAYER /* Player color from config */
+            size: CONFIG.PLAYER.SIZE, /* Player circle radius */
+            color: CONFIG.COLORS.PLAYER, /* Player color from config */
+            velocity: { /* Player movement velocity vector */
+                x: 0, /* Horizontal velocity - starts at 0 */
+                y: 0  /* Vertical velocity - starts at 0 */
+            }
         };
 
         this.projectiles = []; /* Array to store active projectiles */
         this.targets = []; /* Array to store active targets */
+
+        /**
+         * Tracks currently pressed keys for movement */
+        this.inputState = { /* Track keyboard state for player movement */
+            left: false, /* Is left movement key pressed */
+            right: false, /* Is right movement key pressed */
+            up: false, /* Is up movement key pressed */
+            down: false /* Is down movement key pressed */
+        };
     }
 
     initializePools() { /* Set up object pools for entity recycling */
         this.projectilePool = new ObjectPool(() => ({ /* Create projectile pool with factory function */
             x: 0, /* Starting x position */
             y: 0, /* Starting y position */
-            radius: CONFIG.PROJECTILE_RADIUS, /* Projectile size */
+            radius: CONFIG.PROJECTILE.RADIUS, /* Projectile size */
             color: CONFIG.COLORS.PROJECTILE, /* Projectile color */
             velocity: { x: 0, y: 0 } /* Initial velocity vector */
-        }));
+        }), CONFIG.POOLS.INITIAL_SIZE);
 
         this.targetPool = new ObjectPool(() => ({ /* Create target pool with factory function */
             x: 0, /* Starting x position */
@@ -42,11 +55,11 @@ class Game { /* Main game class that manages all game systems and state */
             color: CONFIG.COLORS.TARGET, /* Target color */
             creationTime: 0, /* Will track when target was created */
             currentOpacity: 1 /* Full opacity when spawned */
-        }));
+        }), CONFIG.POOLS.INITIAL_SIZE);
     }
 
     initializeCollisionSystem() { /* Set up spatial partitioning for collision detection */
-        this.collisionGrid = new SpatialGrid(CONFIG.GRID_CELL_SIZE); /* Create grid with configured cell size */
+        this.collisionGrid = new SpatialGrid(CONFIG.PERFORMANCE.GRID_CELL_SIZE); /* Create grid with configured cell size */
     }
 
     setupEventListeners() { /* Configure input handling */
@@ -56,10 +69,33 @@ class Game { /* Main game class that manages all game systems and state */
             const clickY = event.clientY - rect.top; /* Calculate click Y relative to canvas */
             this.createProjectile(clickX, clickY); /* Create projectile at click position */
         });
+        
+        window.addEventListener('keydown', (event) => { /* Listen for key presses */
+            this.handleKeyInput(event.key, true); /* Update input state for key press */
+        });
+        
+        window.addEventListener('keyup', (event) => { /* Listen for key releases */
+            this.handleKeyInput(event.key, false); /* Update input state for key release */
+        });
+    }
+
+    handleKeyInput(key, isPressed) { /* Process keyboard input */
+        if (CONFIG.KEYBOARD_CONTROLS.LEFT.includes(key)) { /* Check if left movement key */
+            this.inputState.left = isPressed; /* Update left movement state */
+        }
+        if (CONFIG.KEYBOARD_CONTROLS.RIGHT.includes(key)) { /* Check if right movement key */
+            this.inputState.right = isPressed; /* Update right movement state */
+        }
+        if (CONFIG.KEYBOARD_CONTROLS.UP.includes(key)) { /* Check if up movement key */
+            this.inputState.up = isPressed; /* Update up movement state */
+        }
+        if (CONFIG.KEYBOARD_CONTROLS.DOWN.includes(key)) { /* Check if down movement key */
+            this.inputState.down = isPressed; /* Update down movement state */
+        }
     }
 
     startTargetGeneration() { /* Begin periodic target creation */
-        setInterval(() => this.createTarget(), CONFIG.TARGET_SPAWN_INTERVAL); /* Create new target at fixed intervals */
+        setInterval(() => this.createTarget(), CONFIG.TARGET.SPAWN_INTERVAL); /* Create new target at fixed intervals */
     }
 
     setupGameSystems() { /* Initialize game subsystems */
@@ -83,13 +119,13 @@ class Game { /* Main game class that manages all game systems and state */
             const target = this.targets[i]; /* Get current target */
             const targetAge = currentTime - target.creationTime; /* Calculate target lifetime */
             
-            if (targetAge >= CONFIG.TARGET_MAX_LIFESPAN) { /* Check if target expired */
+            if (targetAge >= CONFIG.TARGET.MAX_LIFESPAN) { /* Check if target expired */
                 this.targetPool.release(target); /* Return to pool */
                 this.targets.splice(i, 1); /* Remove from active targets */
             } 
-            else if (targetAge > CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT) { /* Check if target should start fading */
-                const fadeTimeTotal = CONFIG.TARGET_MAX_LIFESPAN * (1 - CONFIG.TARGET_FADE_START_PERCENT); /* Calculate total fade duration */
-                const fadeTimeElapsed = targetAge - (CONFIG.TARGET_MAX_LIFESPAN * CONFIG.TARGET_FADE_START_PERCENT); /* Calculate elapsed fade time */
+            else if (targetAge > CONFIG.TARGET.MAX_LIFESPAN * CONFIG.TARGET.FADE_START_PERCENT) { /* Check if target should start fading */
+                const fadeTimeTotal = CONFIG.TARGET.MAX_LIFESPAN * (1 - CONFIG.TARGET.FADE_START_PERCENT); /* Calculate total fade duration */
+                const fadeTimeElapsed = targetAge - (CONFIG.TARGET.MAX_LIFESPAN * CONFIG.TARGET.FADE_START_PERCENT); /* Calculate elapsed fade time */
                 target.currentOpacity = 1 - (fadeTimeElapsed / fadeTimeTotal); /* Update target opacity */
             }
         }
@@ -110,27 +146,98 @@ class Game { /* Main game class that manages all game systems and state */
         }
     }
 
+    updatePlayer() { /* Update player position using physics-based movement */
+        // Apply acceleration based on input
+        if (this.inputState.left) { /* If moving left */
+            this.player.velocity.x -= CONFIG.PLAYER.ACCELERATION; /* Accelerate left */
+        }
+        if (this.inputState.right) { /* If moving right */
+            this.player.velocity.x += CONFIG.PLAYER.ACCELERATION; /* Accelerate right */
+        }
+        if (this.inputState.up) { /* If moving up */
+            this.player.velocity.y -= CONFIG.PLAYER.ACCELERATION; /* Accelerate up */
+        }
+        if (this.inputState.down) { /* If moving down */
+            this.player.velocity.y += CONFIG.PLAYER.ACCELERATION; /* Accelerate down */
+        }
+        
+        // Apply speed limit
+        const currentSpeed = Math.sqrt( /* Calculate current speed magnitude */
+            this.player.velocity.x * this.player.velocity.x + 
+            this.player.velocity.y * this.player.velocity.y
+        );
+        
+        if (currentSpeed > CONFIG.PLAYER.MAX_SPEED) { /* If exceeding max speed */
+            const ratio = CONFIG.PLAYER.MAX_SPEED / currentSpeed; /* Calculate scaling ratio */
+            this.player.velocity.x *= ratio; /* Scale down x velocity */
+            this.player.velocity.y *= ratio; /* Scale down y velocity */
+        }
+        
+        // Apply friction
+        this.player.velocity.x *= CONFIG.PLAYER.FRICTION; /* Apply horizontal friction */
+        this.player.velocity.y *= CONFIG.PLAYER.FRICTION; /* Apply vertical friction */
+        
+        // Very small velocities should be zeroed out to prevent endless tiny movement
+        if (Math.abs(this.player.velocity.x) < 0.01) this.player.velocity.x = 0; /* Stop tiny x movement */
+        if (Math.abs(this.player.velocity.y) < 0.01) this.player.velocity.y = 0; /* Stop tiny y movement */
+        
+        // Update position
+        this.player.x += this.player.velocity.x; /* Apply x velocity to position */
+        this.player.y += this.player.velocity.y; /* Apply y velocity to position */
+        
+        // Apply boundary constraints
+        const padding = CONFIG.PLAYER.BOUNDARY_PADDING; /* Get boundary padding */
+        
+        // Handle x boundaries with momentum conservation
+        if (this.player.x < padding) { /* If beyond left boundary */
+            this.player.x = padding; /* Move to boundary */
+            this.player.velocity.x *= -CONFIG.PLAYER.BOUNCE_ENERGY_LOSS; /* Bounce with energy loss */
+        } else if (this.player.x > this.canvas.width - padding) { /* If beyond right boundary */
+            this.player.x = this.canvas.width - padding; /* Move to boundary */
+            this.player.velocity.x *= -CONFIG.PLAYER.BOUNCE_ENERGY_LOSS; /* Bounce with energy loss */
+        }
+        
+        // Handle y boundaries with momentum conservation
+        if (this.player.y < padding) { /* If beyond top boundary */
+            this.player.y = padding; /* Move to boundary */
+            this.player.velocity.y *= -CONFIG.PLAYER.BOUNCE_ENERGY_LOSS; /* Bounce with energy loss */
+        } else if (this.player.y > this.canvas.height - padding) { /* If beyond bottom boundary */
+            this.player.y = this.canvas.height - padding; /* Move to boundary */
+            this.player.velocity.y *= -CONFIG.PLAYER.BOUNCE_ENERGY_LOSS; /* Bounce with energy loss */
+        }
+    }
+
     updateGameState() { /* Update game state for current frame */
+        this.updatePlayer(); /* Update player position with physics */
         this.updateTargets(); /* Update all targets */
         this.updateProjectiles(); /* Update all projectiles */
     }
 
-    createProjectile(clickX, clickY) { /* Create new projectile from click */
-        const angleToTarget = Math.atan2(clickY - this.player.y, clickX - this.player.x); /* Calculate angle to click */
-        const projectile = this.projectilePool.get(); /* Get projectile from pool */
+    createProjectile(clickX, clickY) { /* Create new projectile with momentum transfer */
+        // Get projectile from pool and calculate angle
+        const projectile = this.projectilePool.get(); /* Get recycled or new projectile */
+        const angleToTarget = Math.atan2(clickY - this.player.y, clickX - this.player.x); /* Calculate firing angle */
         
-        projectile.x = this.player.x; /* Set start X position */
-        projectile.y = this.player.y; /* Set start Y position */
-        projectile.velocity.x = Math.cos(angleToTarget) * CONFIG.PROJECTILE_SPEED; /* Calculate X velocity */
-        projectile.velocity.y = Math.sin(angleToTarget) * CONFIG.PROJECTILE_SPEED; /* Calculate Y velocity */
+        // Set initial position to player position
+        projectile.x = this.player.x; /* Start at player's X position */
+        projectile.y = this.player.y; /* Start at player's Y position */
         
-        this.projectiles.push(projectile); /* Add to active projectiles */
+        // Calculate base velocity components
+        const baseVelocityX = Math.cos(angleToTarget) * CONFIG.PROJECTILE.SPEED; /* Base X velocity from aim */
+        const baseVelocityY = Math.sin(angleToTarget) * CONFIG.PROJECTILE.SPEED; /* Base Y velocity from aim */
+        
+        // Add player momentum with transfer factor
+        const momentumTransferFactor = CONFIG.PROJECTILE.MOMENTUM_TRANSFER; /* How much player momentum affects projectile */
+        projectile.velocity.x = baseVelocityX + (this.player.velocity.x * momentumTransferFactor); /* Combined X velocity */
+        projectile.velocity.y = baseVelocityY + (this.player.velocity.y * momentumTransferFactor); /* Combined Y velocity */
+        
+        this.projectiles.push(projectile); /* Add to active projectiles list */
     }
 
     createTarget() { /* Create new target */
         const target = this.targetPool.get(); /* Get target from pool */
         
-        target.radius = Math.random() * CONFIG.TARGET_SIZE_VARIATION + CONFIG.TARGET_MIN_SIZE; /* Set random size */
+        target.radius = Math.random() * CONFIG.TARGET.SIZE_VARIATION + CONFIG.TARGET.MIN_SIZE; /* Set random size */
         target.x = Math.random() * (this.canvas.width - target.radius * 2) + target.radius; /* Set random X position */
         target.y = Math.random() * (this.canvas.height / 2) + target.radius; /* Set random Y position */
         target.creationTime = Date.now(); /* Set creation timestamp */
@@ -156,7 +263,7 @@ class Game { /* Main game class that manages all game systems and state */
                     this.targets.splice(targetData.index, 1); /* Remove target */
                     this.projectilePool.release(projectile); /* Return projectile to pool */
                     this.projectiles.splice(i, 1); /* Remove projectile */
-                    this.score += 10; /* Increase score */
+                    this.score += CONFIG.TARGET.SCORE_VALUE; /* Increase score */
                     this.scoreElement.textContent = `Score: ${this.score}`; /* Update score display */
                     break; /* Exit loop after collision */
                 }
@@ -180,7 +287,7 @@ class Game { /* Main game class that manages all game systems and state */
             this.lastFpsUpdateTime = timestamp; /* Update FPS timer */
         }
 
-        if (timestamp - this.lastUpdateTime < CONFIG.FRAME_TIME) { /* Check frame timing */
+        if (timestamp - this.lastUpdateTime < CONFIG.PERFORMANCE.FRAME_TIME) { /* Check frame timing */
             requestAnimationFrame((t) => this.update(t)); /* Schedule next frame */
             return; /* Skip update if too soon */
         }

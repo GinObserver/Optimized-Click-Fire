@@ -3,38 +3,91 @@ description:
 globs: 
 alwaysApply: true
 ---
-## 1. Inline Documentation Style
+## 1.Project Structure Rules
+
+- **Modular file organization**: Separate core logic, utilities, and configuration into distinct files
+- **Class-based architecture**: Each major system has its own dedicated class with clear responsibilities
+- **Method grouping by purpose**: Organize methods in logical groups
+
+
+## 2. Inline Documentation Style
 
 - **Every line gets a comment**: `statement; /* explanation */`
 - **Class & method comments**: Place at declaration line `methodName() { /* purpose */ }`
+- **Document class relationships**: Explain how classes interact with each other
 - **Complex blocks**: Add explanatory comments for each logical component
 - **Comment focus**: Explain "what" and "why", not just restating the code
 - **Keep it concise**: Use brief but clear explanations
+- **Show optimization reasoning**: Document performance considerations where relevant
+- **Use consistent format**: Keep comment style consistent across all files
 
-## 2. Code Organization
+## 3. Code Organization
 
+- **Centralized state**: Keep game state variables in main Game class
+- **State in functions**: State variables in functions.
+- **Clear initialization**: Initialize all state variables with appropriate defaults
 - **Methods first approach**: Initialize/configure methods before behavioral methods
+- **Method size**: Keep methods small and focused on a single task
 - **Logical grouping**: Group related methods together (setup, update, rendering)
 - **Constructor at strategic position**: After setup methods, before behavioral methods
+- **Configuration separation**: Keep game configuration in separate CONFIG object
+- **System initialization**: Initialize all subsystems before starting game loop
 - **Game loop at the end**: Place game loop and control methods at the end
+- **Explicit state updates**: Update state in clear, dedicated methods
 
-## 3. Variable Naming Conventions
+## 4. Variable Naming Conventions
 
 - **Descriptive names**: Use names that clearly indicate purpose (`targetPool` not `tPool`)
 - **Consistent casing**: Use camelCase for variables and methods
-- **Hungarian notation avoided**: Don't prefix variables with type indicators
 - **Avoid abbreviations**: Write full words for better readability
-
-## 4. Code Structure Rules
-
-- **Method size**: Keep methods small and focused on a single task
-- **Initialization sequence**: Clear order in constructor (canvas → state → systems → events)
-- **Configuration separation**: Keep game configuration in separate CONFIG object
-- **System initialization**: Initialize all subsystems before starting game loop
-
-## 5. Documentation Best Practices
-
-- **Document constants**: Explain the purpose and units of all configuration values
-- **Document class relationships**: Explain how classes interact with each other
-- **Document performance considerations**: Note any optimizations and their purpose
 - **Use explanatory variables**: Create named variables for complex calculations
+- **Self-documenting parameters**: Choose parameter names that indicate purpose
+
+## 5. Rendering System Design
+
+- **Batch similar operations**: Group rendering of similar entities
+- **Clear rendering sequence**: Establish consistent drawing order
+- **Performance decisions**: Use conditional logic for rendering optimizations
+  - Check if each optimization method is beneficial based on variation
+  - Switch between methods dynamically
+- **Performance monitoring**: Track and display FPS
+
+## 6. Configuration Management
+
+- **Central configuration object**: Store all game parameters in CONFIG
+- **Named constants**: Use descriptive names for all configuration values
+- **Nested organization**: Group related settings in sub-objects
+  - COLORS for all color values
+  - Separate gameplay from visual settings
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
